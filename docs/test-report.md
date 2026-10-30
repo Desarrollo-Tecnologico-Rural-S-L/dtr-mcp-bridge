@@ -20,7 +20,15 @@ Estado: desarrollo parcial, no certificación ni aceptación final. El usuario i
 - Carreras simultáneas con editor nativo u otros plugins. El bloqueo MCP y comprobación inmediata de hash no garantizan atomicidad con escritores externos.
 - V4: lectura estructural implementada; adaptador de escritura de props/styles/interactions **no implementado**. No se considera cumplida la paridad V3/V4.
 - Descubrimiento y ejecución mediante herramientas MCP nuevas: contrato preparado, workflows no desplegados.
-- PHP 8.1/8.3 y CI remoto: configurados en workflow; no atribuirles éxito antes de observar la ejecución remota.
+- CI remoto: véase actualización de evidencia debajo; no sustituye integración real.
 - Regresión funcional en instalaciones reales de WordPress y WooCommerce.
 
 No hay fallos pendientes en las suites locales ejecutadas. Las limitaciones anteriores impiden promover la candidata o declarar terminado el proyecto.
+
+## Actualización: evidencia GitHub Actions
+
+Sobre el commit `eb99351c7dc22748ef647bc016a69475271ba36a`, ejecución `41063944057`, se observaron los pasos PHP syntax e Isolated PHP contracts completados con success en PHP 8.1, 8.3 y 8.5. La consulta de jobs todavía indicaba in_progress aunque todos sus pasos estaban completados; no se confunde esa observación con una prueba real WordPress/Elementor.
+
+Evidencia: https://github.com/Desarrollo-Tecnologico-Rural-S-L/dtr-mcp-bridge/actions/runs/41063944057
+
+Consulta posterior: workflow completado con `conclusion: success`. Queda confirmada la matriz remota PHP 8.1/8.3/8.5 para ese commit.
