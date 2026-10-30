@@ -1,0 +1,101 @@
+{
+  "status": "proposed_not_installed",
+  "version": 1,
+  "tools": [
+    {
+      "name": "wp_elementor_schema",
+      "description": "Lee controles instalados, acciones y JSON Schema. Sin escritura.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "site_id"
+        ],
+        "properties": {
+          "site_id": {
+            "type": "string",
+            "description": "Identificador del registro; nunca una URL."
+          }
+        }
+      },
+      "mapping": {
+        "operation": "extended_read",
+        "arguments": {
+          "operation": "elementor_schema",
+          "query_json": "{}"
+        }
+      }
+    },
+    {
+      "name": "wp_editor_plan",
+      "description": "Añadir elementor_edit al enum existente; prepara un plan y nunca aprueba.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "site_id",
+          "operation",
+          "arguments_json"
+        ],
+        "properties": {
+          "site_id": {
+            "type": "string",
+            "description": "Identificador del registro; nunca una URL."
+          },
+          "operation": {
+            "enum": [
+              "trash",
+              "restore",
+              "delete",
+              "elementor_patch",
+              "elementor_insert_post_content",
+              "elementor_edit",
+              "redirect_create",
+              "cache_purge"
+            ]
+          },
+          "arguments_json": {
+            "type": "string",
+            "maxLength": 450000,
+            "description": "Para elementor_edit, JSON que cumple elementor-contract.json."
+          }
+        }
+      },
+      "mapping": {
+        "operation": "extended_plan"
+      }
+    },
+    {
+      "name": "wp_execute_editor_change",
+      "description": "Contrato existente: ejecutar únicamente plan aprobado. Nunca reintentar automáticamente.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "site_id",
+          "plan_id"
+        ],
+        "properties": {
+          "site_id": {
+            "type": "string",
+            "description": "Identificador del registro; nunca una URL."
+          },
+          "plan_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$"
+          }
+        }
+      },
+      "mapping": {
+        "operation": "extended_execute"
+      },
+      "terminalStates": [
+        "completed",
+        "failed",
+        "verification_failed",
+        "uncertain",
+        "running"
+      ]
+    }
+  ]
+}
