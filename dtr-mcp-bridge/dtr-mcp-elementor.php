@@ -99,6 +99,8 @@ final class DTR_MCP_Elementor {
     }
     private static function control_type($value, $control) {
         $type = $control['type'] ?? '';
+        if (in_array($type, ['select','choose'], true) && isset($control['options'])) { return is_string($value) && ($value === '' || array_key_exists($value, $control['options'])); }
+        if ($type === 'switcher') { return is_string($value) && in_array($value, ['', $control['return_value'] ?? 'yes'], true); }
         if (in_array($type, ['text', 'textarea', 'wysiwyg', 'code', 'color', 'font', 'select', 'choose', 'switcher', 'hidden'], true)) { return is_string($value); }
         if ($type === 'number') { return is_int($value) || is_float($value) || $value === ''; }
         if ($type === 'slider' || $type === 'dimensions') {
@@ -112,7 +114,7 @@ final class DTR_MCP_Elementor {
             return true;
         }
         if ($type === 'url') { return is_array($value) && !array_diff(array_keys($value), ['url','is_external','nofollow']) && (!isset($value['url']) || is_string($value['url'])); }
-        if ($type === 'media') { return is_array($value) && !array_diff(array_keys($value), ['id','url','size','alt','source']) && (!isset($value['id']) || is_int($value['id']) && $value['id'] >= 0); }
+        if ($type === 'media') { return is_array($value) && !array_diff(array_keys($value), ['id','url','size','alt','source']) && (!isset($value['id']) || is_int($value['id']) && $value['id'] >= 0) && (!isset($value['url']) || is_string($value['url'])); }
         if ($type === 'repeater') {
             if (!is_array($value) || !array_is_list($value)) { return false; }
             $ids = [];
@@ -243,6 +245,7 @@ final class DTR_MCP_Elementor {
                 $types[$name][$key]['protected'] = self::sensitive($key) || in_array($key, ['__dynamic__','shortcode','custom_js','custom_code','custom_attributes'], true);
             }
         }
-        return ['schema_version' => 1, 'mutation_operation' => 'elementor_edit', 'actions' => ['set','unset','insert','duplicate','move','reorder','remove'], 'approval_required' => true, 'limits' => ['operations' => 60, 'nodes' => self::MAX_NODES, 'depth' => self::MAX_DEPTH, 'document_bytes' => 2000000], 'widget_controls' => self::redact($types), 'v3_write' => true, 'v4_write' => false, 'javascript_write' => false];
+        $contract = json_decode(file_get_contents(__DIR__ . '/elementor-contract.json'), true);
+        return ['schema_version' => 1, 'mutation_operation' => 'elementor_edit', 'input_schema'=>$contract, 'actions' => ['set','unset','insert','duplicate','move','reorder','remove'], 'approval_required' => true, 'limits' => ['operations' => 60, 'nodes' => self::MAX_NODES, 'depth' => self::MAX_DEPTH, 'document_bytes' => 2000000], 'widget_controls' => self::redact($types), 'v3_write' => true, 'v4_write' => false, 'javascript_write' => false];
     }
 }

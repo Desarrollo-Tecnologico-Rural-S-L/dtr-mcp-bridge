@@ -3,7 +3,7 @@ require __DIR__ . '/bootstrap.php';
 if (in_array('--code-enabled', $argv, true)) { define('DTR_MCP_ALLOW_CODE_PATCHES', true); }
 $schemas = [
     'container'=>['padding'=>['type'=>'dimensions'], 'padding_mobile'=>['type'=>'dimensions']],
-    'heading'=>['title'=>['type'=>'text'], 'link'=>['type'=>'url'], 'title_color'=>['type'=>'color'], 'custom_css'=>['type'=>'code']],
+    'heading'=>['title'=>['type'=>'text'], 'header_size'=>['type'=>'select','options'=>['h1'=>'H1','h2'=>'H2']], 'link'=>['type'=>'url'], 'title_color'=>['type'=>'color'], 'custom_css'=>['type'=>'code']],
     'text-editor'=>['editor'=>['type'=>'wysiwyg']],
     'button'=>['text'=>['type'=>'text'],'link'=>['type'=>'url']],
     'image'=>['image'=>['type'=>'media']],
@@ -34,6 +34,8 @@ $op = edit('parent01',['padding_mobile'],null,['top'=>'10','right'=>'10','bottom
 check(!is_wp_error(run_ops([$op])), 'new responsive setting');
 check(error_is(run_ops([edit('title001',['title'],'wrong','After')]),'DTR_PATCH_CONFLICT'), 'exact before conflict');
 check(error_is(run_ops([edit('title001',['title'],'Before',99)]),'DTR_CONTROL_TYPE_MISMATCH'), 'wrong control type');
+$tag=edit('title001',['header_size'],null,'script'); $tag['before_exists']=false;
+check(error_is(run_ops([$tag]),'DTR_CONTROL_TYPE_MISMATCH'), 'select cannot introduce executable tag');
 check(!is_wp_error(run_ops([edit('icons001',['icon_list',0,'text'],'First','Updated')])), 'repeater nested edit');
 check(!is_wp_error(run_ops([edit('form0001',['form_fields',0,'field_label'],'Name','Your name')])), 'form presentation edit');
 check(error_is(run_ops([edit('form0001',['email_to'],'private@example.org','attacker@example.org')]),'DTR_FORM_SECURITY_PROTECTED'), 'form recipient protected');
