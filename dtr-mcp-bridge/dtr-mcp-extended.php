@@ -3,7 +3,7 @@
 if (!defined('ABSPATH')) { exit; }
 final class DTR_MCP_Extended {
     const READS = ['capabilities', 'types', 'record', 'elementor', 'elementor_search', 'templates', 'redirects', 'redirect_test', 'seo', 'sitemap', 'audit'];
-    const WRITES = ['trash', 'restore', 'delete', 'elementor_patch', 'elementor_insert_post_content', 'elementor_account_finish', 'redirect_create', 'cache_purge'];
+    const WRITES = ['trash', 'restore', 'delete', 'elementor_patch', 'elementor_insert_post_content', 'redirect_create', 'cache_purge'];
     public static function boot() { add_action('rest_api_init', [__CLASS__, 'routes']); }
     public static function allowed_route($route, $method) {
         return ($method === 'GET' && $route === '/dtr-mcp/v1/extended/read') || ($method === 'POST' && in_array($route, ['/dtr-mcp/v1/extended/plan', '/dtr-mcp/v1/extended/execute'], true));
@@ -207,27 +207,41 @@ final class DTR_MCP_Extended {
         $next = $offset + count($items);
         return self::out(['items' => $items, 'total' => $map->data['total'], 'offset' => $offset, 'next_offset' => $next < $map->data['total'] ? $next : null, 'sitemap_hash' => self::hash($map->data['items']), 'complete' => $next >= $map->data['total']]);
     }
-    // Patch only values under settings, addressed by element ID and exact settings path.
-    // Widget identity, layout hierarchy, script/code and arbitrary metadata cannot be replaced.
+    // Elementor V3 settings paths only. All changes require an exact before value, a document hash,
+    // owner approval and post-save verification. New settings keys and credential settings are denied.
+    private static function safe_elementor_value($value, $depth = 0) {
+        if ($depth > 8) { return false; }
+        if (is_string($value)) { return strlen($value) <= 100000 && !preg_match('/[\x00-\x08\x0b\x0c\x0e-\x1f]/', $value); }
+        if (is_bool($value) || is_int($value) || is_float($value) || is_null($value)) { return true; }
+        if (!is_array($value) || count($value) > 200) { return false; }
+        foreach ($value as $k => $v) {
+            if (!is_int($k) && (!is_string($k) || strlen($k) > 100 || preg_match('/(?:pass(?:word)?|secret|token|api.?key|credential|authorization|webhook|smtp|recaptcha|_nonce)/i', $k))) { return false; }
+            if (!self::safe_elementor_value($v, $depth + 1)) { return false; }
+        }
+        return true;
+    }
     public static function patch($data, $patches) {
-        if (!is_array($patches) || count($patches) < 1 || count($patches) > 100) { return self::err('DTR_INVALID_PATCHES'); }
+        if (!is_array($patches) || !array_is_list($patches) || count($patches) < 1 || count($patches) > 60) { return self::err('DTR_INVALID_PATCHES'); }
         $preview = [];
         foreach ($patches as $patch) {
-            if (!self::exact($patch, ['element_id', 'path', 'before', 'after']) || !is_string($patch['element_id'] ?? null) || !is_array($patch['path'] ?? null) || count($patch['path']) < 1 || count($patch['path']) > 8 || !array_key_exists('before', $patch) || !array_key_exists('after', $patch)) { return self::err('DTR_INVALID_PATCH'); }
-            $allowed = ['title', 'editor', 'text', 'description', 'button_text', 'link', 'url', 'alt', 'caption', 'template_id', 'selected_icon', 'image', 'tabs', 'accordion', 'slides', 'title_text', 'content', 'html_tag'];
-            // html_tag changes could alter structure; do not allow them through this value API.
-            if (!in_array($patch['path'][0], $allowed, true) || $patch['path'][0] === 'html_tag') { return self::err('DTR_PATCH_PATH_NOT_ALLOWED'); }
-            foreach ($patch['path'] as $part) { if ((!is_string($part) && !is_int($part)) || preg_match('/(?:pass|secret|token|api.?key|script|code|html|css|__)/i', (string) $part)) { return self::err('DTR_PATCH_PATH_NOT_ALLOWED'); } }
-            if ((!is_string($patch['after']) && !is_int($patch['after'])) || (is_string($patch['after']) && strlen($patch['after']) > 50000)) { return self::err('DTR_INVALID_PATCH'); }
-            if (is_string($patch['after'])) {
-                if (in_array(end($patch['path']), ['url', 'link'], true)) {
-                    if ($patch['after'] !== '' && !str_starts_with($patch['after'], '/') && !str_starts_with($patch['after'], '#') && !preg_match('#^https?://#i', $patch['after']) && !preg_match('#^(mailto:|tel:)#i', $patch['after'])) { return self::err('DTR_INVALID_LINK'); }
-                    if (str_starts_with($patch['after'], '//') || preg_match('/[\x00-\x1f]/', $patch['after'])) { return self::err('DTR_INVALID_LINK'); }
-                } elseif (wp_kses_post($patch['after']) !== $patch['after']) { return self::err('DTR_UNSAFE_MARKUP'); }
+            if (!is_array($patch) || !self::exact($patch, ['element_id','path','before','after']) || !is_string($patch['element_id'] ?? null) || !preg_match('/^[a-f0-9]{7,8}$/D', $patch['element_id']) || !is_array($patch['path'] ?? null) || !array_is_list($patch['path']) || count($patch['path']) < 1 || count($patch['path']) > 8 || !array_key_exists('before', $patch) || !array_key_exists('after', $patch)) { return self::err('DTR_INVALID_PATCH'); }
+            foreach ($patch['path'] as $part) {
+                if ((!is_string($part) && !is_int($part)) || is_string($part) && (!preg_match('/^[A-Za-z0-9_-]{1,100}$/D', $part) || preg_match('/(?:pass(?:word)?|secret|token|api.?key|credential|authorization|webhook|smtp|recaptcha|_nonce|custom_css|custom_js|tracking)/i', $part))) { return self::err('DTR_PATCH_PATH_NOT_ALLOWED'); }
+                if (is_int($part) && ($part < 0 || $part > 200)) { return self::err('DTR_PATCH_PATH_NOT_ALLOWED'); }
             }
-            if (end($patch['path']) === 'template_id') { $t = get_post((int) $patch['after']); if (!$t || $t->post_type !== 'elementor_library' || !current_user_can('read_post', $t->ID)) { return self::err('DTR_TEMPLATE_NOT_FOUND'); } }
+            if (!self::safe_elementor_value($patch['after']) || strlen(wp_json_encode($patch['after'])) > 100000) { return self::err('DTR_INVALID_PATCH'); }
+            $last = (string) end($patch['path']);
+            if (in_array($last, ['url','link'], true) && is_string($patch['after'])) {
+                $link = $patch['after'];
+                if ($link !== '' && !str_starts_with($link, '/') && !str_starts_with($link, '#') && !preg_match('#^(https?://|mailto:|tel:)#i', $link)) { return self::err('DTR_INVALID_LINK'); }
+                if (str_starts_with($link, '//') || preg_match('/[\x00-\x1f]/', $link)) { return self::err('DTR_INVALID_LINK'); }
+            }
+            // A full HTML/script fragment requires an additional explicit opt-in in WordPress.
+            $code_path = (bool) preg_match('/(?:html|script|javascript|custom_code|css)/i', implode('/', array_map('strval', $patch['path'])));
+            if ($code_path && !defined('DTR_MCP_ALLOW_CODE_PATCHES')) { return self::err('DTR_CODE_PATCHES_DISABLED', 403); }
+            if ($code_path && DTR_MCP_ALLOW_CODE_PATCHES !== true) { return self::err('DTR_CODE_PATCHES_DISABLED', 403); }
             $found = 0; self::walk_patch($data, $patch, $found); if ($found !== 1) { return self::err('DTR_PATCH_CONFLICT', 409); }
-            $preview[] = $patch;
+            $preview[] = ['element_id'=>$patch['element_id'], 'path'=>$patch['path'], 'before'=>$patch['before'], 'after'=>$patch['after'], 'code_review_required'=>$code_path];
         }
         return ['elements' => $data, 'preview' => $preview];
     }
@@ -257,8 +271,8 @@ final class DTR_MCP_Extended {
         };
         $scan($data);
         if ($already) { return self::err('DTR_POST_CONTENT_ALREADY_PRESENT', 409); }
-        $new_id = substr(bin2hex(random_bytes(8)), 0, 7);
-        while (in_array($new_id, $ids, true)) { $new_id = substr(bin2hex(random_bytes(8)), 0, 7); }
+        $seed = self::hash([$parent_id, $data]); $counter = 0;
+        do { $new_id = substr(hash('sha256', $seed . ':' . $counter++), 0, 7); } while (in_array($new_id, $ids, true));
         $widget = ['id' => $new_id, 'elType' => 'widget', 'settings' => [], 'elements' => [], 'widgetType' => 'theme-post-content'];
         $add = function (&$nodes) use (&$add, $parent_id, $widget, &$parent_count) {
             foreach ($nodes as &$n) {
@@ -273,38 +287,13 @@ final class DTR_MCP_Extended {
         if ($parent_count !== 1) { return self::err('DTR_CONTAINER_NOT_FOUND', 409); }
         return ['elements' => $data, 'preview' => ['action' => 'insert_native_post_content', 'parent_id' => $parent_id, 'widget_id' => $new_id, 'widget_type' => 'theme-post-content']];
     }
-    // Narrow, approved structural cleanup of JHModelator My Account template only.
-    private static function account_finish($data) {
-        $login = 0; $content = 0; $heading = 0;
-        $walk = function (&$nodes) use (&$walk, &$login, &$content, &$heading) {
-            foreach ($nodes as $key => &$node) {
-                $id = $node['id'] ?? '';
-                if ($id === 'c7e4c38' && ($node['widgetType'] ?? '') === 'login') { unset($nodes[$key]); $login++; continue; }
-                if ($id === '7ccfdd1' && ($node['widgetType'] ?? '') === 'theme-post-content') { $content++; }
-                if ($id === 'a804194' && ($node['widgetType'] ?? '') === 'heading' && ($node['settings']['title'] ?? '') === 'Acceder') {
-                    $node['settings']['title'] = 'Mi cuenta'; $heading++;
-                }
-                if (isset($node['elements']) && is_array($node['elements'])) { $walk($node['elements']); }
-            }
-            unset($node); $nodes = array_values($nodes);
-        };
-        $walk($data);
-        if ($login !== 1 || $content !== 1 || $heading !== 1) { return self::err('DTR_ACCOUNT_TEMPLATE_CHANGED', 409); }
-        return ['elements'=>$data,'preview'=>['action'=>'account_finish','remove_widget'=>'c7e4c38','keep_widget'=>'7ccfdd1','heading'=>'Mi cuenta','styling'=>'scoped_woocommerce_account_theme']];
-    }
     private static function describe($op, $a) {
         if (!in_array($op, self::WRITES, true)) { return self::err('DTR_OPERATION_NOT_ALLOWED'); }
-        if (in_array($op, ['trash', 'restore', 'delete', 'elementor_patch', 'elementor_insert_post_content', 'elementor_account_finish'], true)) {
+        if (in_array($op, ['trash', 'restore', 'delete', 'elementor_patch', 'elementor_insert_post_content'], true)) {
             if (!self::exact($a, $op === 'elementor_patch' ? ['id', 'expected_hash', 'patches'] : ($op === 'elementor_insert_post_content' ? ['id', 'expected_hash', 'parent_id'] : ['id', 'expected_hash']))) { return self::err('DTR_INVALID_ARGUMENTS'); }
             $p = self::post($a['id'] ?? null, true); if (is_wp_error($p)) { return $p; }
             $before = self::state($p);
             if (!is_string($a['expected_hash'] ?? null) || !hash_equals(self::hash($before), $a['expected_hash'])) { return self::err('DTR_CONTENT_CHANGED', 409); }
-            if ($op === 'elementor_account_finish') {
-                if ($p->ID !== 2624 || $p->post_type !== 'elementor_library' || get_post_meta($p->ID, '_elementor_template_type', true) !== 'single-page' || get_post_meta($p->ID, '_elementor_conditions', true) !== ['include/singular/page/9']) { return self::err('DTR_ACCOUNT_TEMPLATE_SCOPE_DENIED', 409); }
-                $data = self::elements($p->ID); if (is_wp_error($data)) { return $data; }
-                $patched = self::account_finish($data); if (is_wp_error($patched)) { return $patched; }
-                return ['target'=>(string)$p->ID,'before'=>$before,'preview'=>$patched['preview'],'after_elements'=>$patched['elements']];
-            }
             if ($op === 'elementor_insert_post_content') {
                 if ($p->post_status === 'trash' || $p->post_type !== 'elementor_library' || get_post_meta($p->ID, '_elementor_template_type', true) !== 'single-page') { return self::err('DTR_INVALID_TEMPLATE', 409); }
                 $data = self::elements($p->ID); if (is_wp_error($data)) { return $data; }
@@ -366,7 +355,7 @@ final class DTR_MCP_Extended {
             if (!$payload || !hash_equals($row['offer_hash'], self::hash($payload))) { return self::err('DTR_PLAN_CHANGED', 409); }
             $d = self::describe($payload['operation'], $payload['arguments']); if (is_wp_error($d)) { return $d; }
             if (!hash_equals($row['before_hash'], self::hash($d['before']))) { return self::err('DTR_CONTENT_CHANGED', 409); }
-            if (in_array($payload['operation'], ['elementor_patch', 'elementor_insert_post_content', 'elementor_account_finish', 'trash', 'restore', 'delete'], true)) {
+            if (in_array($payload['operation'], ['elementor_patch', 'elementor_insert_post_content', 'trash', 'restore', 'delete'], true)) {
                 require_once ABSPATH . 'wp-admin/includes/post.php';
                 if (wp_check_post_lock((int) $d['target'])) { return self::err('DTR_EDITOR_LOCKED', 409); }
             }
@@ -376,6 +365,13 @@ final class DTR_MCP_Extended {
             return is_wp_error($result) ? $result : self::out(['plan_id' => $id, 'status' => 'completed', 'result' => $result]);
         } catch (Throwable $e) { if ($claimed) { $wpdb->update($table, ['status' => 'failed', 'result_code' => 'DTR_EXTENDED_EXCEPTION'], ['plan_id' => $id]); } return self::err('DTR_EXTENDED_SAVE_FAILED', 500); }
         finally { delete_option('dtr_mcp_write_lock'); }
+    }
+    private static function has_elementor_widget($nodes, $id, $type) {
+        foreach ($nodes as $n) {
+            if (($n['id'] ?? '') === $id && ($n['widgetType'] ?? '') === $type) { return true; }
+            if (!empty($n['elements']) && self::has_elementor_widget($n['elements'], $id, $type)) { return true; }
+        }
+        return false;
     }
     private static function perform($op, $a, $d) {
         $id = isset($a['id']) ? (int) $a['id'] : null;
@@ -387,20 +383,16 @@ final class DTR_MCP_Extended {
             return $r && get_post_status($id) === 'draft' ? ['id' => $id, 'status' => 'draft'] : self::err('DTR_RESTORE_FAILED', 500);
         }
         if ($op === 'delete') { $r = wp_delete_post($id, true); return $r && !get_post($id) ? ['id' => $id, 'deleted' => true] : self::err('DTR_DELETE_FAILED', 500); }
-        if (in_array($op, ['elementor_patch', 'elementor_insert_post_content', 'elementor_account_finish'], true)) {
+        if (in_array($op, ['elementor_patch', 'elementor_insert_post_content'], true)) {
             $doc = \Elementor\Plugin::$instance->documents->get($id);
             if (!$doc || !is_callable([$doc, 'save'])) { return self::err('DTR_ELEMENTOR_DOCUMENT_UNAVAILABLE', 409); }
             wp_save_post_revision($id);
             if (!$doc->save(['elements' => $d['after_elements']])) { return self::err('DTR_ELEMENTOR_SAVE_FAILED', 500); }
             $after = self::elements($id);
-            if ($op === 'elementor_account_finish') {
-                if (is_wp_error($after)) { return self::err('DTR_ELEMENTOR_VERIFY_FAILED', 500); }
-                $ids = []; $inspect = function ($nodes) use (&$inspect, &$ids) { foreach ($nodes as $n) { if (isset($n['id'])) { $ids[$n['id']] = $n; } if (isset($n['elements']) && is_array($n['elements'])) { $inspect($n['elements']); } } }; $inspect($after);
-                if (isset($ids['c7e4c38']) || ($ids['7ccfdd1']['widgetType'] ?? '') !== 'theme-post-content' || ($ids['a804194']['settings']['title'] ?? '') !== 'Mi cuenta') { return self::err('DTR_ELEMENTOR_VERIFY_FAILED', 500); }
-                update_option('dtr_mcp_woo_account_styling', true, false);
-                return ['id'=>$id,'changes_applied'=>2,'styling_enabled'=>true,'saved_via'=>'elementor_document_api'];
-            }
-            if (is_wp_error($after) || !hash_equals(self::hash($after), self::hash($d['after_elements']))) { return self::err('DTR_ELEMENTOR_VERIFY_FAILED', 500); }
+            if (is_wp_error($after)) { return self::err('DTR_ELEMENTOR_VERIFY_FAILED', 500); }
+            $verified = $op === 'elementor_patch' ? self::patch($after, array_map(static function ($p) { return ['element_id'=>$p['element_id'], 'path'=>$p['path'], 'before'=>$p['after'], 'after'=>$p['after']]; }, $a['patches'])) : null;
+            if ($op === 'elementor_patch' && is_wp_error($verified)) { return self::err('DTR_ELEMENTOR_VERIFY_FAILED', 500); }
+            if ($op === 'elementor_insert_post_content' && !self::has_elementor_widget($after, $d['preview']['widget_id'], 'theme-post-content')) { return self::err('DTR_ELEMENTOR_VERIFY_FAILED', 500); }
             return ['id' => $id, 'expected_hash' => self::hash(self::state(get_post($id))), 'changes_applied' => $op === 'elementor_insert_post_content' ? 1 : count($d['preview']), 'saved_via' => 'elementor_document_api'];
         }
         if ($op === 'cache_purge') {
