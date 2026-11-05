@@ -42,3 +42,11 @@ La búsqueda literal de Elementor identificó un widget de texto en la página �
 En este punto se han probado lectura, preparación y rechazo de un plan obsoleto en el sitio real. La ejecución, la persistencia y la lectura posterior requieren la aprobación manual del plan válido.
 
 El HTML público de la página respondió con HTTP 200. Contenía el ID del widget y la frase original y todavía no contenía la frase propuesta. Como control negativo adicional, WordPress rechazó una solicitud que asignaba un número al control `editor` con `DTR_CONTROL_TYPE_MISMATCH`.
+
+### Resultado de la edición de texto aprobada en DEV
+
+El primer plan caducó. Tras releer el estado del widget, se preparó el plan `5c064288651a5e8570487f0fdee09474`. WordPress confirmó `approved` para `elementor_patch` sobre la página 60. Una única llamada a `extended_execute` aplicó un cambio mediante la API Document de Elementor. El resultado indicó `persisted=true`, `verified=true` y `changes_applied=1`. La consulta posterior del registro devolvió `completed` y `OK`.
+
+La relectura independiente encontró «Te responderemos en breve.» en el widget `7591ec1`, ruta `editor`, con el mismo hash SHA256 que devolvió el guardado (`d8eef94b841641e298fabe1ae9001511e10ef3db324bde920f5d4810d1c289ef`). Un GET público a `/gracias/` devolvió HTTP 200 y el párrafo nuevo completo. La frase anterior ya no aparecía en el HTML.
+
+Esta prueba cubre el ciclo de lectura, aprobación humana, guardado de texto y publicación del resultado en el HTML de DEV mediante `elementor_patch`. La edición estructural mediante `elementor_edit`, otros controles y la escritura V4 siguen pendientes de sus propias verificaciones.
