@@ -66,3 +66,11 @@ La relectura del árbol devolvió el orden de raíz ea88521a, 3c325a06, 612486c.
 ### Duplicación, movimiento y reordenación en DEV con rc.3
 
 El plan 92cd840a09b172df86eace99bf628647 se ejecutó una sola vez tras comprobar su aprobación en WordPress. Aplicó tres operaciones sobre la página 60 y terminó en completed con resultado OK, persisted=true y verified=true. Una lectura independiente confirmó el orden de raíz [612486c, 3c325a06]. El contenedor de prueba 3c325a06 tenía dos hijos vacíos en orden: la copia 581924e0 y el elemento movido ea88521a. Este último conservó su identificador. El hash leído coincidió con el del guardado (fd3224d800a5ec8a9afe50f3678c557253c805ad87c62bd7a076aa04a57bdb7c). La eliminación del subárbol de prueba queda pendiente de aprobación y verificación.
+
+### Eliminación del subárbol de prueba en DEV con rc.3
+
+En la página «Gracias» se ejecutó una sola vez el plan aprobado a268adbdd3d52b9a37f4a7777635ee06. WordPress registró una operación remove, persisted=true y verified=true. La consulta posterior del plan confirmó completed y OK.
+
+Una relectura independiente encontró únicamente 612486c en la raíz. Al recorrer todos los descendientes se confirmó la ausencia del padre 3c325a06 y de sus hijos 581924e0 y ea88521a. El widget 7591ec1 conservó el texto aprobado «Te responderemos en breve.». El hash leído coincidió con el comunicado al guardar (067f20f14600471558f71daa9f476d0fa6e2205a2a0532c06ccc3c635bc6809f).
+
+Con estas pruebas quedaron verificadas inserción, duplicación, movimiento, reordenación y eliminación de contenedores clásicos V3 en este documento DEV con rc.3.
