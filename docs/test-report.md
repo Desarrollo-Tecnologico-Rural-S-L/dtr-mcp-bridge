@@ -32,3 +32,13 @@ Sobre el commit `eb99351c7dc22748ef647bc016a69475271ba36a`, ejecución `41063944
 Evidencia: https://github.com/Desarrollo-Tecnologico-Rural-S-L/dtr-mcp-bridge/actions/runs/41063944057
 
 Consulta posterior: workflow completado con `conclusion: success`. Queda confirmada la matriz remota PHP 8.1/8.3/8.5 para ese commit.
+
+## Integración DEV del 5 de noviembre de 2026
+
+El conector autenticado del sitio `fisiolaser-dev` confirmó Bridge `1.3.7-rc.2`, WordPress `7.1.4` y PHP `8.5.12`, con escrituras de contenido habilitadas y aprobación obligatoria. El sitio anuncia las operaciones `elementor_schema` y `elementor_edit`. La publicación de sus contratos MCP sigue pendiente.
+
+La búsqueda literal de Elementor identificó un widget de texto en la página «Gracias» de DEV y devolvió su ruta `editor`, el valor anterior y el hash del documento. `elementor_patch` preparó un cambio de una frase y devolvió una vista previa con el antes y el después. WordPress registró el plan en estado `pending` con caducidad. Una solicitud independiente con un hash deliberadamente incorrecto devolvió `DTR_CONTENT_CHANGED`.
+
+En este punto se han probado lectura, preparación y rechazo de un plan obsoleto en el sitio real. La ejecución, la persistencia y la lectura posterior requieren la aprobación manual del plan válido.
+
+El HTML público de la página respondió con HTTP 200. Contenía el ID del widget y la frase original y todavía no contenía la frase propuesta. Como control negativo adicional, WordPress rechazó una solicitud que asignaba un número al control `editor` con `DTR_CONTROL_TYPE_MISMATCH`.
