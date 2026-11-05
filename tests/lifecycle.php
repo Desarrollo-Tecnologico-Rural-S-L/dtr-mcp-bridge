@@ -35,6 +35,9 @@ class TestDocuments {
         $this->calls++;
         if ($this->mode === 'throw') { throw new RuntimeException('not exposed'); }
         if ($this->mode === 'false') { return false; }
+        if ($this->mode === 'normalize_container') {
+            $data['elements'][0] += ['isInner' => false];
+        }
         $GLOBALS['meta'][1]['_elementor_data'] = json_encode($this->mode === 'partial' ? [] : $data['elements']);
         return true;
     }
@@ -44,16 +47,21 @@ $documents = new TestDocuments();
 \Elementor\Plugin::$instance = (object)['elements_manager'=>new TestManager(),'widgets_manager'=>new TestManager(),'documents'=>$documents];
 $GLOBALS['posts'][1] = (object)['ID'=>1,'post_type'=>'page','post_status'=>'draft','post_title'=>'Test','post_content'=>'','post_modified_gmt'=>'2026-10-30 00:00:00'];
 function reset_document() { global $tree, $documents; $GLOBALS['meta'][1]['_elementor_data'] = json_encode($tree); $documents->mode='ok'; }
-function plan() {
+function plan($operations = null) {
     reset_document();
     $read = DTR_MCP_Extended::read(new TestRequest(['operation'=>'elementor','query_json'=>'{"id":1}']));
-    $r = DTR_MCP_Extended::plan(new TestRequest(['operation'=>'elementor_edit','arguments'=>['id'=>1,'expected_hash'=>$read->data['expected_hash'],'operations'=>[edit('title001',['title'],'Before','After')]]]));
+    $r = DTR_MCP_Extended::plan(new TestRequest(['operation'=>'elementor_edit','arguments'=>['id'=>1,'expected_hash'=>$read->data['expected_hash'],'operations'=>$operations ?? [edit('title001',['title'],'Before','After')]]]));
     check($r instanceof WP_REST_Response, 'plan creates preview');
     return $r->data['plan_id'];
 }
 // Fixture approval state only: never invokes or bypasses a real WordPress approval.
 function fixture_approved($id) { $GLOBALS['wpdb']->rows[$id]['status']='approved'; $GLOBALS['wpdb']->rows[$id]['approved_by']=3; }
 function execute_plan($id) { return DTR_MCP_Extended::execute(new TestRequest(['plan_id'=>$id])); }
+$id = plan([['action'=>'insert', 'parent_id'=>null, 'position'=>0, 'element'=>['elType'=>'container']]]);
+fixture_approved($id);
+$documents->mode = 'normalize_container';
+$result = execute_plan($id);
+check($result instanceof WP_REST_Response && $result->data['status'] === 'completed', 'verify root container after native isInner normalization');
 $id=plan(); check(error_is(execute_plan($id),'DTR_NOT_APPROVED_OR_EXPIRED'),'pending plan cannot execute');
 fixture_approved($id); $r=execute_plan($id);
 check($r instanceof WP_REST_Response && $r->data['status']==='completed' && $r->data['result']['verified']===true,'approved plan persists and verifies');

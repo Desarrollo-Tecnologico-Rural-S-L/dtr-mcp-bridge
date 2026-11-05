@@ -192,7 +192,10 @@ final class DTR_MCP_Elementor {
                     $node = $action === 'insert' ? ($op['element'] ?? null) : $entry['node'];
                     if (!is_array($node)) { return self::fail('DTR_INVALID_ELEMENT'); }
                     if ($action === 'insert') {
-                if (array_diff(array_keys($node), ['elType','widgetType','settings','elements','isInner'])) { return self::fail('DTR_INVALID_ELEMENT'); }
+                        if (array_diff(array_keys($node), ['elType','widgetType','settings','elements','isInner'])) { return self::fail('DTR_INVALID_ELEMENT'); }
+                        if (($node['elType'] ?? '') === 'container') {
+                            $node += ['isInner' => false];
+                        }
                         $node += ['settings' => [], 'elements' => []];
                         if (!is_array($node['settings']) || $node['elements'] !== []) { return self::fail('DTR_INSERT_ONE_ELEMENT'); }
                     }

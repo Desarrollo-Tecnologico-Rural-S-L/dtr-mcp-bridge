@@ -50,3 +50,9 @@ El primer plan caducó. Tras releer el estado del widget, se preparó el plan `5
 La relectura independiente encontró «Te responderemos en breve.» en el widget `7591ec1`, ruta `editor`, con el mismo hash SHA256 que devolvió el guardado (`d8eef94b841641e298fabe1ae9001511e10ef3db324bde920f5d4810d1c289ef`). Un GET público a `/gracias/` devolvió HTTP 200 y el párrafo nuevo completo. La frase anterior ya no aparecía en el HTML.
 
 Esta prueba cubre el ciclo de lectura, aprobación humana, guardado de texto y publicación del resultado en el HTML de DEV mediante `elementor_patch`. La edición estructural mediante `elementor_edit`, otros controles y la escritura V4 siguen pendientes de sus propias verificaciones.
+
+### Inserción estructural en DEV con rc.2
+
+El adaptador DEV publicado admitió elementor_edit. WordPress registró aprobación y se ejecutó una vez el plan 9a0c94b6956727d403cf554d5555519d. El guardado devolvió persisted=true, verified=false y verification_failed. Una lectura independiente confirmó el contenedor vacío 3c325a06 en la raíz, posición 0, con isInner=false. El hash leído coincidió con el devuelto después del guardado. No se reintentó el plan.
+
+La candidata rc.3 incluye el valor predeterminado isInner=false al construir un contenedor nuevo. Una prueba del ciclo completo reprodujo la discrepancia antes del cambio y pasó después. Se mantiene la comparación íntegra del árbol. Suites locales: 74 comprobaciones de ciclo y 45 con código habilitado. Queda pendiente validar la candidata instalada con una nueva operación aprobada.
