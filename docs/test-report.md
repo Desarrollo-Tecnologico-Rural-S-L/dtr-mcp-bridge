@@ -62,3 +62,7 @@ La candidata rc.3 incluye el valor predeterminado isInner=false al construir un 
 El 5 de noviembre de 2026, WordPress confirmó la aprobación del plan 2abfb05a67e04aa7fd475f7297611dbc sobre la página 60. Una sola llamada aplicó una inserción mediante la API Document. El resultado indicó persisted=true, verified=true y changes_applied=1. La consulta de estado posterior confirmó completed y OK.
 
 La relectura del árbol devolvió el orden de raíz ea88521a, 3c325a06, 612486c. El nodo nuevo ea88521a era un contenedor vacío con isInner=false en posición 0. El hash de la relectura coincidió con el devuelto tras guardar (df8b36ed84648e939d6533b64313d731e97cb616818f9e3e54bb8ab91bad943f). Esto valida la corrección para esta inserción V3 en DEV.
+
+### Duplicación, movimiento y reordenación en DEV con rc.3
+
+El plan 92cd840a09b172df86eace99bf628647 se ejecutó una sola vez tras comprobar su aprobación en WordPress. Aplicó tres operaciones sobre la página 60 y terminó en completed con resultado OK, persisted=true y verified=true. Una lectura independiente confirmó el orden de raíz [612486c, 3c325a06]. El contenedor de prueba 3c325a06 tenía dos hijos vacíos en orden: la copia 581924e0 y el elemento movido ea88521a. Este último conservó su identificador. El hash leído coincidió con el del guardado (fd3224d800a5ec8a9afe50f3678c557253c805ad87c62bd7a076aa04a57bdb7c). La eliminación del subárbol de prueba queda pendiente de aprobación y verificación.
