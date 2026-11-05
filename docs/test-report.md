@@ -56,3 +56,9 @@ Esta prueba cubre el ciclo de lectura, aprobación humana, guardado de texto y p
 El adaptador DEV publicado admitió elementor_edit. WordPress registró aprobación y se ejecutó una vez el plan 9a0c94b6956727d403cf554d5555519d. El guardado devolvió persisted=true, verified=false y verification_failed. Una lectura independiente confirmó el contenedor vacío 3c325a06 en la raíz, posición 0, con isInner=false. El hash leído coincidió con el devuelto después del guardado. No se reintentó el plan.
 
 La candidata rc.3 incluye el valor predeterminado isInner=false al construir un contenedor nuevo. Una prueba del ciclo completo reprodujo la discrepancia antes del cambio y pasó después. Se mantiene la comparación íntegra del árbol. Suites locales: 74 comprobaciones de ciclo y 45 con código habilitado. Queda pendiente validar la candidata instalada con una nueva operación aprobada.
+
+### Inserción estructural verificada en DEV con rc.3
+
+El 5 de noviembre de 2026, WordPress confirmó la aprobación del plan 2abfb05a67e04aa7fd475f7297611dbc sobre la página 60. Una sola llamada aplicó una inserción mediante la API Document. El resultado indicó persisted=true, verified=true y changes_applied=1. La consulta de estado posterior confirmó completed y OK.
+
+La relectura del árbol devolvió el orden de raíz ea88521a, 3c325a06, 612486c. El nodo nuevo ea88521a era un contenedor vacío con isInner=false en posición 0. El hash de la relectura coincidió con el devuelto tras guardar (df8b36ed84648e939d6533b64313d731e97cb616818f9e3e54bb8ab91bad943f). Esto valida la corrección para esta inserción V3 en DEV.
