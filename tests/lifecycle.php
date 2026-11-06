@@ -31,6 +31,9 @@ class TestManager {
 class TestDocuments {
     public $mode = 'ok'; public $calls = 0;
     public function get($id) { return $this; }
+    public function set_is_built_with_elementor($enabled) {
+        if ($this->mode !== 'activation_failure' && $enabled) { $GLOBALS['meta'][1]['_elementor_edit_mode'] = 'builder'; }
+    }
     public function save($data) {
         $this->calls++;
         if ($this->mode === 'throw') { throw new RuntimeException('not exposed'); }
@@ -57,6 +60,37 @@ function plan($operations = null) {
 // Fixture approval state only: never invokes or bypasses a real WordPress approval.
 function fixture_approved($id) { $GLOBALS['wpdb']->rows[$id]['status']='approved'; $GLOBALS['wpdb']->rows[$id]['approved_by']=3; }
 function execute_plan($id) { return DTR_MCP_Extended::execute(new TestRequest(['plan_id'=>$id])); }
+function activation_plan($flags) {
+    $read = DTR_MCP_Extended::read(new TestRequest(['operation'=>'elementor','query_json'=>'{"id":1}']));
+    $args = ['id'=>1,'expected_hash'=>$read->data['expected_hash'],'operations'=>[
+        ['action'=>'insert','parent_id'=>null,'position'=>0,'element'=>['elType'=>'container']]
+    ]];
+    return DTR_MCP_Extended::plan(new TestRequest(['operation'=>'elementor_edit','arguments'=>$args + $flags]));
+}
+$activate = ['activate_builder'=>true];
+check(error_is(activation_plan([]),'DTR_ELEMENTOR_ACTIVATION_REQUIRED'), 'plain page needs explicit activation');
+$GLOBALS['posts'][1]->post_status = 'publish';
+check(error_is(activation_plan($activate),'DTR_ACTIVATION_REQUIRES_EMPTY_DRAFT_PAGE'), 'published page cannot be converted');
+$GLOBALS['posts'][1]->post_status = 'draft';
+$GLOBALS['posts'][1]->post_content = 'Existing content';
+check(error_is(activation_plan($activate),'DTR_ACTIVATION_REQUIRES_EMPTY_DRAFT_PAGE'), 'existing content cannot be replaced');
+$GLOBALS['posts'][1]->post_content = '';
+$proposal = activation_plan($activate);
+check($proposal->data['preview'][0]['action'] === 'activate_builder', 'activation visible in approval');
+$id = $proposal->data['plan_id'];
+fixture_approved($id);
+$GLOBALS['meta'][1]['_elementor_edit_mode'] = 'builder';
+check(error_is(execute_plan($id),'DTR_CONTENT_CHANGED'), 'concurrent builder activation invalidates approved plan');
+unset($GLOBALS['meta'][1]['_elementor_edit_mode']);
+$documents->mode = 'activation_failure';
+$result = execute_plan($id);
+check($result->data['status'] === 'verification_failed' && $result->data['result']['persisted'] && !$result->data['retry_safe'], 'saved tree with missing builder flag is a consumed partial write');
+unset($GLOBALS['meta'][1]['_elementor_data']);
+$documents->mode = 'ok';
+$id = activation_plan($activate)->data['plan_id'];
+fixture_approved($id);
+$result = execute_plan($id);
+check($result->data['status'] === 'completed' && get_post_meta(1,'_elementor_edit_mode',true) === 'builder' && get_post(1)->post_status === 'draft', 'initialize new draft through document API');
 $schemas['button']['text_padding'] = ['type'=>'dimensions', 'is_responsive'=>true, 'responsive'=>['devices'=>['desktop','mobile']]];
 \Elementor\Plugin::$instance->breakpoints = new class {
     public function get_active_devices_list() { return ['desktop','tablet','mobile']; }

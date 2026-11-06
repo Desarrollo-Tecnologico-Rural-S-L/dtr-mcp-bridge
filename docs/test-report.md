@@ -74,3 +74,9 @@ En la página «Gracias» se ejecutó una sola vez el plan aprobado a268adbdd3d5
 Una relectura independiente encontró únicamente 612486c en la raíz. Al recorrer todos los descendientes se confirmó la ausencia del padre 3c325a06 y de sus hijos 581924e0 y ea88521a. El widget 7591ec1 conservó el texto aprobado «Te responderemos en breve.». El hash leído coincidió con el comunicado al guardar (067f20f14600471558f71daa9f476d0fa6e2205a2a0532c06ccc3c635bc6809f).
 
 Con estas pruebas quedaron verificadas inserción, duplicación, movimiento, reordenación y eliminación de contenedores clásicos V3 en este documento DEV con rc.3.
+
+### Botón responsive y activación de borradores
+
+RC4, borrador 2991. El plan 11075a474c1f8c08e903052fbce56600 terminó en completed y la lectura confirmó rellenos de 16/24 px y 8/12 px (vertical/horizontal). La primera vista previa mostró el enlace de WordPress y la lectura devolvió builder nulo. Tras abrir la página en Elementor, las capturas del propietario mostraron el widget 4bd0d137. En escritorio se observaron los cuatro valores y en móvil emulado a 440 px se vieron 8 px abajo y 12 px en ambos lados en Computed.
+
+RC5. Se preparó la página DEV 2998 como borrador nuevo. La prueba pendiente consiste en activar Elementor mediante plan aprobado, insertar el botón y abrir la primera vista previa sin pasar antes por el editor. Las pruebas PHP cubren la activación explícita, los conflictos, las páginas con contenido y el guardado parcial.

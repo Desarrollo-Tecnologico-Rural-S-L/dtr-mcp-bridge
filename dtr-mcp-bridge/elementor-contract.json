@@ -9,6 +9,10 @@
     "operations"
   ],
   "properties": {
+    "activate_builder": {
+      "const": true,
+      "description": "Explicitly activate Elementor on an empty draft page as part of the approved edit."
+    },
     "id": {
       "type": "integer",
       "minimum": 1

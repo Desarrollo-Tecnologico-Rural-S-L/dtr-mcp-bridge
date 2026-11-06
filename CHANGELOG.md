@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.7-rc.5
+- Activación explícita de Elementor para páginas en borrador vacías. La vista previa del plan incluye la activación y la ejecución verifica el árbol, el modo de edición y el estado de borrador.
+- El hash de estado v3 incluye el modo de edición. Después de actualizar, obtener un hash nuevo y volver a preparar los planes pendientes sobre contenido.
+
 ## 1.3.7-rc.4
 - Reconoce las variantes por dispositivo de controles de dimensiones que Elementor genera en el editor. Respeta los dispositivos activos y las restricciones del control.
 
