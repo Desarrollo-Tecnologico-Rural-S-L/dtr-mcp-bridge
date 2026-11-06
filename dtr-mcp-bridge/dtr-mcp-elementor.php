@@ -232,11 +232,24 @@ final class DTR_MCP_Elementor {
     public static function schemas() {
         if (!class_exists('Elementor\\Plugin')) { return []; }
         $plugin = \Elementor\Plugin::$instance;
+        $devices = is_callable([$plugin->breakpoints ?? null, 'get_active_devices_list'])
+            ? $plugin->breakpoints->get_active_devices_list() : [];
         $types = array_merge($plugin->elements_manager->get_element_types(), $plugin->widgets_manager->get_widget_types());
         $result = [];
         foreach ($types as $name => $type) {
             if (!is_callable([$type, 'get_controls'])) { continue; }
-            $result[$name] = $type->get_controls();
+            $controls = $type->get_controls();
+            // Elementor can register only the base dimensions control and expand devices in the editor.
+            foreach ($controls as $key => $control) {
+                if (($control['is_responsive'] ?? false) !== true || ($control['type'] ?? '') !== 'dimensions') { continue; }
+                $allowed = $control['responsive']['devices'] ?? $devices;
+                foreach (array_intersect($devices, $allowed) as $device) {
+                    if ($device !== 'desktop') {
+                        $controls[$key . '_' . $device] ??= $control;
+                    }
+                }
+            }
+            $result[$name] = $controls;
         }
         return $result;
     }

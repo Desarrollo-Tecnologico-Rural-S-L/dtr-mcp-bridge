@@ -57,6 +57,24 @@ function plan($operations = null) {
 // Fixture approval state only: never invokes or bypasses a real WordPress approval.
 function fixture_approved($id) { $GLOBALS['wpdb']->rows[$id]['status']='approved'; $GLOBALS['wpdb']->rows[$id]['approved_by']=3; }
 function execute_plan($id) { return DTR_MCP_Extended::execute(new TestRequest(['plan_id'=>$id])); }
+$schemas['button']['text_padding'] = ['type'=>'dimensions', 'is_responsive'=>true, 'responsive'=>['devices'=>['desktop','mobile']]];
+\Elementor\Plugin::$instance->breakpoints = new class {
+    public function get_active_devices_list() { return ['desktop','tablet','mobile']; }
+};
+$controls = DTR_MCP_Elementor::schemas()['button'];
+check(isset($controls['text_padding_mobile']), 'resolve mobile dimensions registered only on the base control');
+check(!isset($controls['text_padding_tablet']) && !isset($controls['text_padding_widescreen']) && !isset($controls['text_mobile']), 'limit virtual devices and controls');
+$padding = ['unit'=>'px','top'=>'16','right'=>'24','bottom'=>'16','left'=>'24','isLinked'=>false];
+$tree[0]['elements'][] = widget('button01','button',['text_padding'=>$padding]);
+$mobile = array_replace($padding, ['top'=>'8','bottom'=>'8']);
+$op = edit('button01',['text_padding_mobile'],null,$mobile);
+$op['before_exists'] = false;
+$id = plan([$op]);
+fixture_approved($id);
+$result = execute_plan($id);
+$saved = json_decode($GLOBALS['meta'][1]['_elementor_data'], true)[0]['elements'];
+check($result->data['status'] === 'completed' && end($saved)['settings'] === ['text_padding'=>$padding,'text_padding_mobile'=>$mobile], 'mobile dimensions persist alongside desktop dimensions');
+array_pop($tree[0]['elements']);
 $id = plan([['action'=>'insert', 'parent_id'=>null, 'position'=>0, 'element'=>['elType'=>'container']]]);
 fixture_approved($id);
 $documents->mode = 'normalize_container';

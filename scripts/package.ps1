@@ -3,7 +3,7 @@ $taskRoot = Split-Path -Parent $PSScriptRoot
 $taskSource = Join-Path $taskRoot 'dtr-mcp-bridge'
 $taskOutput = Join-Path $taskRoot 'dist'
 New-Item -ItemType Directory -Force -Path $taskOutput | Out-Null
-$taskArchive = Join-Path $taskOutput 'dtr-mcp-bridge-1.3.7-rc.3.zip'
+$taskArchive = Join-Path $taskOutput 'dtr-mcp-bridge-1.3.7-rc.4.zip'
 Compress-Archive -LiteralPath $taskSource -DestinationPath $taskArchive -Force
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $taskZip = [IO.Compression.ZipFile]::OpenRead($taskArchive)
@@ -22,6 +22,6 @@ try {
     }
 } finally { $taskZip.Dispose() }
 $taskDigest = (Get-FileHash -LiteralPath $taskArchive -Algorithm SHA256).Hash.ToLowerInvariant()
-[IO.File]::WriteAllText((Join-Path $taskOutput 'SHA256SUMS.txt'), "$taskDigest  dtr-mcp-bridge-1.3.7-rc.3.zip`n")
+[IO.File]::WriteAllText((Join-Path $taskOutput 'SHA256SUMS.txt'), "$taskDigest  dtr-mcp-bridge-1.3.7-rc.4.zip`n")
 Write-Output "Verified package: $taskArchive"
 Write-Output "SHA256: $taskDigest"

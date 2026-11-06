@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.7-rc.4
+- Reconoce las variantes por dispositivo de controles de dimensiones que Elementor genera en el editor. Respeta los dispositivos activos y las restricciones del control.
+
 ## 1.3.7-rc.2 (desarrollo parcial, no estable)
 - Motor genérico de cambios settings y operaciones estructurales V3, validado contra controles instalados.
 - Consulta estructural, ajustes de página/kit, esquema descubrible y hashes canónicos.
