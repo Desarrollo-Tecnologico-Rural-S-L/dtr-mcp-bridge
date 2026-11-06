@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.7-rc.6
+- El puente reconoce el control `form-fields-repeater` de Elementor Pro en `form.form_fields` y valida cada campo con el esquema registrado por el widget.
+
 ## 1.3.7-rc.5
 - Activación explícita de Elementor para páginas en borrador vacías. La vista previa del plan incluye la activación y la ejecución verifica el árbol, el modo de edición y el estado de borrador.
 - El hash de estado v3 incluye el modo de edición. Después de actualizar, obtener un hash nuevo y volver a preparar los planes pendientes sobre contenido.

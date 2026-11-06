@@ -141,7 +141,11 @@ final class DTR_MCP_Elementor {
             if (!is_string($key) || !isset($controls[$key])) { return self::fail('DTR_UNKNOWN_CONTROL'); }
             if ($kind === 'form' && $key !== 'form_fields' && ($controls[$key]['tab'] ?? '') !== 'style' && !in_array($key, ['form_name', 'button_text', 'show_labels', 'mark_required'], true)) { return self::fail('DTR_FORM_SECURITY_PROTECTED', 403); }
             $ok = self::value($new[$key] ?? null, [$key]); if (is_wp_error($ok)) { return $ok; }
-            if (array_key_exists($key, $new) && !self::control_type($new[$key], $controls[$key])) { return self::fail('DTR_CONTROL_TYPE_MISMATCH'); }
+            $control = $controls[$key];
+            if ($kind === 'form' && $key === 'form_fields' && ($control['type'] ?? '') === 'form-fields-repeater') {
+                $control['type'] = 'repeater';
+            }
+            if (array_key_exists($key, $new) && !self::control_type($new[$key], $control)) { return self::fail('DTR_CONTROL_TYPE_MISMATCH'); }
         }
         return $kind === 'form' ? self::form($old, $new) : true;
     }

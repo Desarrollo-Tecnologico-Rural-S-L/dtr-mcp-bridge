@@ -10,7 +10,7 @@ $schemas = [
     'accordion'=>['tabs'=>['type'=>'repeater','fields'=>['tab_title'=>['type'=>'text'],'tab_content'=>['type'=>'wysiwyg']]]],
     'html'=>['html'=>['type'=>'code']],
     'icon-list'=>['icon_list'=>['type'=>'repeater','fields'=>['text'=>['type'=>'text'],'link'=>['type'=>'url']]]],
-    'form'=>['email_to'=>['type'=>'text'], 'submit_actions'=>['type'=>'select2'], 'button_text'=>['type'=>'text'], 'color'=>['type'=>'color','tab'=>'style'], 'form_fields'=>['type'=>'repeater','fields'=>['field_type'=>['type'=>'text'], 'field_label'=>['type'=>'text'], 'required'=>['type'=>'switcher']]]],
+    'form'=>['email_to'=>['type'=>'text'], 'webhooks'=>['type'=>'text'], 'submit_actions'=>['type'=>'select2'], 'button_text'=>['type'=>'text'], 'color'=>['type'=>'color','tab'=>'style'], 'form_fields'=>['type'=>'form-fields-repeater','fields'=>['field_type'=>['type'=>'text'], 'field_label'=>['type'=>'text'], 'required'=>['type'=>'switcher']]]],
     'section'=>[], 'column'=>[], 'theme-post-content'=>[],
 ];
 function widget($id, $type, $settings = []) { return ['id'=>$id,'elType'=>'widget','widgetType'=>$type,'settings'=>$settings,'elements'=>[]]; }
@@ -37,7 +37,16 @@ check(error_is(run_ops([edit('title001',['title'],'Before',99)]),'DTR_CONTROL_TY
 $tag=edit('title001',['header_size'],null,'script'); $tag['before_exists']=false;
 check(error_is(run_ops([$tag]),'DTR_CONTROL_TYPE_MISMATCH'), 'select cannot introduce executable tag');
 check(!is_wp_error(run_ops([edit('icons001',['icon_list',0,'text'],'First','Updated')])), 'repeater nested edit');
+$field = ['_id'=>'f010001','field_type'=>'text','field_label'=>'Referencia de prueba'];
+$addField = edit('form0001',['form_fields',1],null,$field);
+$addField['before_exists'] = false;
+$result = run_ops([$addField]);
+check(!is_wp_error($result) && $result['elements'][0]['elements'][3]['settings']['form_fields'][1] === $field, 'add a text field using the Elementor Pro repeater');
 check(!is_wp_error(run_ops([edit('form0001',['form_fields',0,'field_label'],'Name','Your name')])), 'form presentation edit');
+check(error_is(run_ops([edit('form0001',['form_fields',0,'field_label'],'Name',123)]),'DTR_CONTROL_TYPE_MISMATCH'), 'Pro repeater validates nested field types');
+$webhook = edit('form0001',['webhooks'],null,'https://example.invalid/prueba');
+$webhook['before_exists'] = false;
+check(error_is(run_ops([$webhook]),'DTR_FORM_SECURITY_PROTECTED'), 'form webhook URL protected');
 check(error_is(run_ops([edit('form0001',['email_to'],'private@example.org','attacker@example.org')]),'DTR_FORM_SECURITY_PROTECTED'), 'form recipient protected');
 check(error_is(run_ops([edit('form0001',['submit_actions'],['email'],['webhook'])]),'DTR_FORM_SECURITY_PROTECTED'), 'form actions protected');
 check(error_is(run_ops([edit('form0001',['form_fields',0,'field_type'],'text','hidden')]),'DTR_FORM_SECURITY_PROTECTED'), 'form hidden field injection');

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DTR MCP Bridge
  * Description: Mantenimiento REST con solicitudes de un solo uso y aprobacion humana local.
- * Version: 1.3.7-rc.5
+ * Version: 1.3.7-rc.6
  * Requires at least: 6.5
  * Requires PHP: 8.1
  * Author: DTR
@@ -14,7 +14,7 @@ require_once __DIR__ . '/dtr-mcp-extended.php';
 require_once __DIR__ . '/dtr-mcp-woo.php';
 
 final class DTR_MCP_Bridge {
-    const VERSION = '1.3.7-rc.5';
+    const VERSION = '1.3.7-rc.6';
     private static $application_user = 0;
     private static $upgrading = false;
 
