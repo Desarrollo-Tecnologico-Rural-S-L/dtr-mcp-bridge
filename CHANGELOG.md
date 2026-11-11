@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.7-rc.9
+- Permite sustituir el texto de títulos atómicos guardados como `escaped-html` en Elementor DEV, preservando el tipo y rechazando marcado.
+
+## 1.3.7-rc.8
+- El índice de lectura admite colecciones vacías omitidas en nodos atómicos. El plan de edición admite sustituir texto existente del título de un `e-heading` con valores tipados compatibles. Pendiente de validación en DEV.
+
 ## 1.3.7-rc.7
 - Admite el valor registrado por Elementor para activar la tipografía personalizada y los tamaños por dispositivo declarados como controles deslizantes responsive.
 

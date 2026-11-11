@@ -138,3 +138,17 @@ En DEV, el plan `a4ad2e2184bfaf58eae63a0cebbae663` terminó en completed. Una re
 Se ejecutó lint sobre diez archivos PHP y pasaron las suites de ciclo (90 comprobaciones) y de código habilitado (48), tanto con el sanitizador de prueba como con KSES de WordPress 6.8. El empaquetador verificó las rutas y el contenido de los seis archivos del ZIP contra el código local. SHA256 de la RC7: e65b43d8324069d441897cb6fb6f001ebe49e048c251120a4a352b639ad1a3ce.
 
 El inventario de DEV devolvió Bridge 1.3.7-rc.7, WordPress 7.1.4, Elementor 4.3.5 y Pro 4.3.0. WooCommerce no figuraba entre los 32 plugins devueltos. El borrador V4 3013 devolvió cero elementos. Quedan pendientes la escritura y validación V4, la regresión funcional con WooCommerce y la matriz GitHub Actions sobre la revisión final.
+
+### Borrador atómico real y candidata RC8
+
+El editor nativo de DEV leyó en la página 3013 un e-flexbox con un e-heading H2 y el texto «Prueba V4». RC7 devolvió DTR_INVALID_ELEMENT sobre ese documento. La herramienta nativa devuelve una representación de las propiedades para edición, no el metadato sin procesar. La causa exacta del rechazo en ese documento debe confirmarse mediante la instalación y relectura con RC8.
+
+RC8 conserva los campos omitidos en el documento y aplica valores predeterminados solo en el índice de nodos atómicos. Las pruebas locales cubren el cambio puntual del texto tipado, conflicto por texto previo, rechazo de HTML y de valores dinámicos. Pasaron lint, 95 comprobaciones de ciclo y 53 con código habilitado, con y sin KSES real. Paquete SHA256 841918035c9ef989e17df31d3fe9d7eeea4e2a38a869653e4d92902236333e72.
+
+El commit RC7 8f49cf95509bf5bf1510a9d78594970381829c40 superó GitHub Actions (ejecución 43069640487). En DEV se confirmó WooCommerce 11.3.0 activo, el índice wc/v3 con las rutas de productos, planificación y ejecución y el rechazo HTTP 403 DTR_WOO_KEY_AUTH_REQUIRED de una solicitud de plan sin autenticar. Falta verificar el ciclo autenticado de WooCommerce con una credencial dedicada a DEV.
+### WooCommerce y Elementor en DEV con RC9
+
+El 11 de noviembre de 2026, DEV informó de Bridge 1.3.7-rc.9. El plan WooCommerce 9b5189a55ccfde0dccb1ff5945fbf9ed figuraba como aprobado (ejecución n8n 4917). La ejecución 4918 devolvió HTTP 200 y estado `done`. Una lectura independiente con la credencial WooCommerce de DEV (4919) confirmó el producto 3033 con el nombre «Producto de prueba DTR MCP verificado» y estado `draft`.
+
+En el borrador Elementor 3013, RC9 leyó el título tipado `escaped-html` con el valor «Prueba V4». El plan ccf0d679904702ffc03b0065b3c09ba6 propuso cambiar solo el valor a «Prueba V4 verificada».
+Mientras la pestaña del editor estaba abierta, WordPress devolvió `DTR_EDITOR_LOCKED` y el plan conservó la aprobación. Tras pasar a la vista previa y expirar el bloqueo, la API Document ejecutó el mismo plan con estado `completed` y un cambio verificado. Una segunda lectura confirmó que solo cambió el texto del encabezado. El documento siguió en borrador y conservó sus ajustes y condiciones. La vista previa autenticada mostró el H2 «Prueba V4 verificada» tras recargar.

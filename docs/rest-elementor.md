@@ -49,7 +49,7 @@ Plan devuelve `plan_id`, `preview`, `expires_at`, `approval_required:true`. El a
 - máximo 60 operaciones, 500 KB por plan, 2 MB por documento, 4000 elementos y profundidad 30; valores hasta 100 KB y 200 entradas por colección.
 - Campos HTML y custom_css requieren `DTR_MCP_ALLOW_CODE_PATCHES === true` y `unfiltered_html` efectivo. Se aceptan HTML de presentación compatible con KSES y CSS local sin url/import/escapes. JavaScript, PHP, shortcodes, atributos personalizados y contenido dinámico quedan bloqueados. No se crea una constante que habilite JavaScript.
 - Form Pro: campos visibles y presentación; bloqueados destinatarios, acciones, integraciones y cambios de campos ocultos/antispam. Algunos formularios con configuraciones complejas se rechazan de forma conservadora.
-- Lectura V4 preserva campos; escritura atómica no implementada (`DTR_ATOMIC_WRITE_UNSUPPORTED`). No hay certificación V4. No se modifican globales ni condiciones mediante estilos.
+- En RC9, `elementor_edit` permite cambiar el texto plano de un `e-heading` existente mediante `set`. Para títulos `string` o `escaped-html`, la ruta es `["title","value"]`. Para `html-v3` con contenido de tipo `string`, es `["title","value","content","value"]`. El plan exige el texto anterior y conserva el tipo original. La edición de estilos e interacciones V4 queda fuera de este soporte.
 
 ## Estados y errores
 

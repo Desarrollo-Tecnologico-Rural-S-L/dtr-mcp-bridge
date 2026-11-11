@@ -23,6 +23,12 @@ final class DTR_MCP_Elementor {
         $walk = static function ($nodes, $parent, $path, $depth) use (&$walk, &$index, &$error) {
             if ($depth > self::MAX_DEPTH || !is_array($nodes) || !array_is_list($nodes)) { $error = self::fail('DTR_TREE_LIMIT'); return; }
             foreach ($nodes as $position => $node) {
+                // Atomic elements may omit empty collections. Defaults belong only
+                // to the index: preserve the original document for hashing and saving.
+                if (is_array($node) && is_string($node['elType'] ?? null) &&
+                    is_string($node['widgetType'] ?? '') && self::atomic($node)) {
+                    $node += ['settings' => [], 'elements' => []];
+                }
                 if (!is_array($node) || !is_string($node['id'] ?? null) || !preg_match('/^[A-Za-z0-9_-]{1,64}$/D', $node['id']) || !is_string($node['elType'] ?? null) || !is_array($node['settings'] ?? null) || !is_array($node['elements'] ?? null)) { $error = self::fail('DTR_INVALID_ELEMENT'); return; }
                 if (isset($index[$node['id']])) { $error = self::fail('DTR_DUPLICATE_ELEMENT_ID'); return; }
                 if (count($index) >= self::MAX_NODES) { $error = self::fail('DTR_TREE_LIMIT'); return; }
@@ -168,7 +174,24 @@ final class DTR_MCP_Elementor {
             if (isset($op['element_id']) && !is_string($op['element_id']) || isset($op['parent_id']) && !is_string($op['parent_id'])) { return self::fail('DTR_INVALID_ELEMENT_ID'); }
             $entry = $index[$op['element_id'] ?? ''] ?? null;
             if (in_array($action, ['set','unset','duplicate','move','remove'], true) && !$entry) { return self::fail('DTR_ELEMENT_NOT_FOUND', 409); }
-            if ($entry && self::atomic($entry['node'])) { return self::fail('DTR_ATOMIC_WRITE_UNSUPPORTED', 409); }
+            $atomic = $entry && self::atomic($entry['node']);
+            if ($atomic) {
+                $heading = $entry['node'];
+                $title = $heading['settings']['title'] ?? null;
+                $plain = is_array($title) && in_array($title['$$type'] ?? null, ['string', 'escaped-html'], true);
+                $rich = is_array($title) && ($title['$$type'] ?? null) === 'html-v3' &&
+                    ($title['value']['content']['$$type'] ?? null) === 'string';
+                $titlePath = $plain ? ['title', 'value'] : ($rich ? ['title', 'value', 'content', 'value'] : null);
+                if ($heading['elType'] !== 'widget' || ($heading['widgetType'] ?? '') !== 'e-heading' ||
+                    $action !== 'set' || $titlePath === null || ($op['path'] ?? null) !== $titlePath ||
+                    ($op['before_exists'] ?? true) !== true || !is_string($op['before'] ?? null) ||
+                    !is_string($op['after'] ?? null)) {
+                    return self::fail('DTR_ATOMIC_WRITE_UNSUPPORTED', 409);
+                }
+                if (strpbrk(html_entity_decode($op['after'], ENT_QUOTES | ENT_HTML5, 'UTF-8'), '<>') !== false) {
+                    return self::fail('DTR_UNSAFE_HTML', 403);
+                }
+            }
             if ($action === 'set' || $action === 'unset') {
                 $path = $op['path'] ?? null;
                 if (!is_array($path) || !array_is_list($path) || !$path || count($path) > 12 || !array_key_exists('before', $op) || $action === 'set' && !array_key_exists('after', $op) || isset($op['before_exists']) && !is_bool($op['before_exists'])) { return self::fail('DTR_INVALID_PATCH'); }
@@ -181,7 +204,8 @@ final class DTR_MCP_Elementor {
                 if ($exists !== ($op['before_exists'] ?? true) || $exists && $ref[$last] !== $op['before'] || !$exists && $op['before'] !== null) { return self::fail('DTR_PATCH_CONFLICT', 409); }
                 if ($action === 'unset') { unset($ref[$last]); if (is_int($last)) { $ref = array_values($ref); } }
                 else { $ref[$last] = $op['after']; }
-                $ok = self::settings($node, $old, $node['settings'], $schemas); if (is_wp_error($ok)) { return $ok; }
+                $ok = $atomic ? self::value($op['after'], $op['path']) : self::settings($node, $old, $node['settings'], $schemas);
+                if (is_wp_error($ok)) { return $ok; }
                 unset($ref, $node);
             } elseif ($action === 'remove') {
                 $path = $entry['path']; $pos = array_pop($path); $siblings = &self::at($tree, $path); array_splice($siblings, $pos, 1); unset($siblings);
