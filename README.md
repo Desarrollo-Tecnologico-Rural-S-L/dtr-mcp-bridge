@@ -5,7 +5,7 @@ Complemento privado para integrar WordPress y WooCommerce con el MCP DTR gestion
 ## Estado
 - **main**: 1.3.6, versión de referencia estable.
 - **develop**: 1.3.7-rc.1, candidata de ampliación Elementor V3; no certificada.
-- **feature/elementor-v3**: 1.3.7-rc.2, motor V3 y planes con pruebas locales; pendiente integración real, escritura V4 y despliegue de contratos MCP. No estable.
+- **feature/elementor-v3**: 1.3.7-rc.7. La RC6 se probó en DEV con widgets V3, formularios y estilos. En RC7 se verificaron la tipografía responsive, el descubrimiento del esquema por widget y el ciclo completo de edición de un botón desde MCP. La escritura V4 sigue pendiente.
 
 ## Instalación
 Instalar el paquete ZIP de la versión validada desde WordPress. No incluir claves de API ni credenciales en el repositorio.

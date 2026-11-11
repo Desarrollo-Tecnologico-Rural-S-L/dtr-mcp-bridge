@@ -96,6 +96,16 @@ $schemas['button']['text_padding'] = ['type'=>'dimensions', 'is_responsive'=>tru
     public function get_active_devices_list() { return ['desktop','tablet','mobile']; }
 };
 $controls = DTR_MCP_Elementor::schemas()['button'];
+$schemas['heading']['typography_typography'] = ['type'=>'popover_toggle', 'return_value'=>'custom'];
+$schemas['heading']['typography_font_size'] = ['type'=>'slider', 'is_responsive'=>true];
+$toggle = edit('title001', ['typography_typography'], null, 'custom');
+$toggle['before_exists'] = false;
+$fontSize = edit('title001', ['typography_font_size_mobile'], null, ['unit'=>'px','size'=>24]);
+$fontSize['before_exists'] = false;
+$responsiveResult = DTR_MCP_Elementor::transform($tree, [$toggle, $fontSize], DTR_MCP_Elementor::schemas());
+check(!is_wp_error($responsiveResult) && $responsiveResult['elements'][0]['elements'][0]['settings']['typography_font_size_mobile']['size'] === 24, 'enable custom typography and set mobile font size');
+$toggle['after'] = 'arbitrary';
+check(error_is(DTR_MCP_Elementor::transform($tree, [$toggle], DTR_MCP_Elementor::schemas()), 'DTR_CONTROL_TYPE_MISMATCH'), 'reject unregistered popover value');
 check(isset($controls['text_padding_mobile']), 'resolve mobile dimensions registered only on the base control');
 check(!isset($controls['text_padding_tablet']) && !isset($controls['text_padding_widescreen']) && !isset($controls['text_mobile']), 'limit virtual devices and controls');
 $padding = ['unit'=>'px','top'=>'16','right'=>'24','bottom'=>'16','left'=>'24','isLinked'=>false];

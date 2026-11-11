@@ -3,15 +3,25 @@ $taskRoot = Split-Path -Parent $PSScriptRoot
 $taskSource = Join-Path $taskRoot 'dtr-mcp-bridge'
 $taskOutput = Join-Path $taskRoot 'dist'
 New-Item -ItemType Directory -Force -Path $taskOutput | Out-Null
-$taskArchive = Join-Path $taskOutput 'dtr-mcp-bridge-1.3.7-rc.6.zip'
-Compress-Archive -LiteralPath $taskSource -DestinationPath $taskArchive -Force
+$taskArchive = Join-Path $taskOutput 'dtr-mcp-bridge-1.3.7-rc.7.zip'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+Add-Type -AssemblyName System.IO.Compression
+$taskStreamOut = [IO.File]::Create($taskArchive)
+try {
+    $taskWriter = [IO.Compression.ZipArchive]::new($taskStreamOut, [IO.Compression.ZipArchiveMode]::Create)
+    try {
+        foreach ($taskFile in (Get-ChildItem -LiteralPath $taskSource -File | Sort-Object Name)) {
+            [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($taskWriter, $taskFile.FullName, "dtr-mcp-bridge/$($taskFile.Name)") | Out-Null
+        }
+    } finally { $taskWriter.Dispose() }
+} finally { $taskStreamOut.Dispose() }
 $taskZip = [IO.Compression.ZipFile]::OpenRead($taskArchive)
 try {
     $taskEntries = @($taskZip.Entries | Where-Object { $_.Name })
     if ($taskEntries.Count -ne 6) { throw 'Unexpected package contents' }
+    if (!$taskZip.GetEntry('dtr-mcp-bridge/dtr-mcp-bridge.php')) { throw 'Missing plugin entry point' }
     foreach ($taskEntry in $taskEntries) {
-        $taskName = $taskEntry.FullName.Replace('\','/')
+        $taskName = $taskEntry.FullName
         if ($taskName -notmatch '^dtr-mcp-bridge/[a-z0-9-]+\.(php|json)$') { throw 'Unexpected entry path' }
         $taskStream = $taskEntry.Open()
         $taskHasher = [Security.Cryptography.SHA256]::Create()
@@ -22,6 +32,6 @@ try {
     }
 } finally { $taskZip.Dispose() }
 $taskDigest = (Get-FileHash -LiteralPath $taskArchive -Algorithm SHA256).Hash.ToLowerInvariant()
-[IO.File]::WriteAllText((Join-Path $taskOutput 'SHA256SUMS.txt'), "$taskDigest  dtr-mcp-bridge-1.3.7-rc.6.zip`n")
+[IO.File]::WriteAllText((Join-Path $taskOutput 'SHA256SUMS.txt'), "$taskDigest  dtr-mcp-bridge-1.3.7-rc.7.zip`n")
 Write-Output "Verified package: $taskArchive"
 Write-Output "SHA256: $taskDigest"

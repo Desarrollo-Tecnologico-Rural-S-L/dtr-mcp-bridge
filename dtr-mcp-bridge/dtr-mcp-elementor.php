@@ -100,7 +100,9 @@ final class DTR_MCP_Elementor {
     private static function control_type($value, $control) {
         $type = $control['type'] ?? '';
         if (in_array($type, ['select','choose'], true) && isset($control['options'])) { return is_string($value) && ($value === '' || array_key_exists($value, $control['options'])); }
-        if ($type === 'switcher') { return is_string($value) && in_array($value, ['', $control['return_value'] ?? 'yes'], true); }
+        if ($type === 'switcher' || $type === 'popover_toggle') {
+            return is_string($value) && in_array($value, ['', $control['return_value'] ?? 'yes'], true);
+        }
         if (in_array($type, ['text', 'textarea', 'wysiwyg', 'code', 'color', 'font', 'select', 'choose', 'switcher', 'hidden'], true)) { return is_string($value); }
         if ($type === 'number') { return is_int($value) || is_float($value) || $value === ''; }
         if ($type === 'slider' || $type === 'dimensions') {
@@ -243,9 +245,9 @@ final class DTR_MCP_Elementor {
         foreach ($types as $name => $type) {
             if (!is_callable([$type, 'get_controls'])) { continue; }
             $controls = $type->get_controls();
-            // Elementor can register only the base dimensions control and expand devices in the editor.
+            // Elementor can register the base control and expand per-device controls in the editor.
             foreach ($controls as $key => $control) {
-                if (($control['is_responsive'] ?? false) !== true || ($control['type'] ?? '') !== 'dimensions') { continue; }
+                if (($control['is_responsive'] ?? false) !== true || !in_array($control['type'] ?? '', ['dimensions', 'slider'], true)) { continue; }
                 $allowed = $control['responsive']['devices'] ?? $devices;
                 foreach (array_intersect($devices, $allowed) as $device) {
                     if ($device !== 'desktop') {

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.7-rc.7
+- Admite el valor registrado por Elementor para activar la tipografía personalizada y los tamaños por dispositivo declarados como controles deslizantes responsive.
+
 ## 1.3.7-rc.6
 - El puente reconoce el control `form-fields-repeater` de Elementor Pro en `form.form_fields` y valida cada campo con el esquema registrado por el widget.
 

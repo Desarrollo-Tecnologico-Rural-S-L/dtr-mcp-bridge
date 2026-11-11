@@ -1,8 +1,8 @@
-# Integración MCP/n8n — propuesta, no aplicada
+# Integración MCP/n8n en DEV
 
-Inspección de solo lectura el 2026-10-30: el adaptador DEV `DTR WordPress - FisioLaser DEV - Escritura` tiene el nodo `Validar operacion`, credencial separada y host fijo. Su allowlist de `extended_plan` admite elementor_patch e inserción Post Content, pero **rechaza elementor_edit**. El adaptador no es un canal para instalar ZIPs. No se ha actualizado ningún workflow activo.
+El adaptador de escritura de FisioLaser DEV admite `elementor_edit` a través de `wp_editor_plan`. Se verificaron aprobación, ejecución y relectura en los borradores de pruebas. El 10 de noviembre ambos adaptadores DEV figuraban activos. El catálogo del cliente todavía describe la versión anterior de `wp_editor_plan`. La herramienta `wp_elementor_schema` está publicada para FisioLaser DEV y admite el parámetro `widget_type`.
 
-## Cambios preparados
+## Diseño de la integración y cambios previstos
 
 1. Herramientas MCP: publicar la nueva lectura `wp_elementor_schema`; ampliar descripción y enum de `wp_editor_plan` con elementor_edit. Contratos: `integration/mcp-elementor-tools.json`; argumentos de edición: `dtr-mcp-bridge/elementor-contract.json`.
 2. Router: mantener la resolución por site_id, separar lectura/escritura y permitir la nueva lectura y operación únicamente para sitios cuya capability/version la anuncie. No aceptar URLs/credenciales/rutas de cliente.
@@ -21,4 +21,4 @@ La JSON Schema no crea una herramienta automáticamente. Se debe probar `tools/l
 - Después de autorizar y aplicar la actualización n8n, repetir para elementor_edit, incluyendo insertar/duplicar/mover/reordenar/eliminar; verificar tools/list y rechazo de sitios/operaciones extra.
 - No utilizar pin data como prueba de autenticación, persistencia ni integración real.
 
-Pendiente: publicar cambios n8n bajo autorización del propietario, instalar candidata, confirmar widgets/controles efectivos, aprobación humana y E2E. Las credenciales no se exportan, copian ni incluyen en los contratos.
+La sesión MCP autenticada verificó el descubrimiento de controles del encabezado y del botón en DEV. El plan del botón de la página 2991 se ejecutó y se verificó mediante relectura. Los cambios en el servidor compartido de producción requieren autorización específica.
