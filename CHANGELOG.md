@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.7
+
+Edición estructural de Elementor V3 mediante planes aprobados en WordPress y edición del texto de encabezados existentes en Elementor V4. El ZIP conserva el código funcional de la RC9 verificada en DEV.
+
 ## 1.3.7-rc.9
 - Permite sustituir el texto de títulos atómicos guardados como `escaped-html` en Elementor DEV, preservando el tipo y rechazando marcado.
 
