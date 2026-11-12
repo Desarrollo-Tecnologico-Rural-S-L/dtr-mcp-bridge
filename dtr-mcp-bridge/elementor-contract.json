@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DTR Elementor edit arguments v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "expected_hash",
+    "operations"
+  ],
+  "properties": {
+    "activate_builder": {
+      "const": true,
+      "description": "Explicitly activate Elementor on an empty draft page as part of the approved edit."
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expected_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 60,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/set"
+          },
+          {
+            "$ref": "#/$defs/unset"
+          },
+          {
+            "$ref": "#/$defs/insert"
+          },
+          {
+            "$ref": "#/$defs/move"
+          },
+          {
+            "$ref": "#/$defs/duplicate"
+          },
+          {
+            "$ref": "#/$defs/remove"
+          },
+          {
+            "$ref": "#/$defs/reorder"
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "set": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "element_id",
+        "path",
+        "before",
+        "after"
+      ],
+      "properties": {
+        "action": {
+          "const": "set"
+        },
+        "element_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "path": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,100}$"
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 199
+              }
+            ]
+          }
+        },
+        "before": {},
+        "after": {},
+        "before_exists": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "unset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "element_id",
+        "path",
+        "before"
+      ],
+      "properties": {
+        "action": {
+          "const": "unset"
+        },
+        "element_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "path": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,100}$"
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 199
+              }
+            ]
+          }
+        },
+        "before": {}
+      }
+    },
+    "insert": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "parent_id",
+        "position",
+        "element"
+      ],
+      "properties": {
+        "action": {
+          "const": "insert"
+        },
+        "parent_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "element": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "elType"
+          ],
+          "properties": {
+            "elType": {
+              "enum": [
+                "widget",
+                "container",
+                "section",
+                "column"
+              ]
+            },
+            "widgetType": {
+              "type": "string"
+            },
+            "settings": {
+              "type": "object"
+            },
+            "elements": {
+              "type": "array",
+              "maxItems": 0
+            },
+            "isInner": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "move": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "element_id",
+        "parent_id",
+        "position"
+      ],
+      "properties": {
+        "action": {
+          "const": "move"
+        },
+        "element_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "parent_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "duplicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "element_id",
+        "parent_id",
+        "position"
+      ],
+      "properties": {
+        "action": {
+          "const": "duplicate"
+        },
+        "element_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "parent_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "remove": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "element_id"
+      ],
+      "properties": {
+        "action": {
+          "const": "remove"
+        },
+        "element_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      }
+    },
+    "reorder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "parent_id",
+        "order"
+      ],
+      "properties": {
+        "action": {
+          "const": "reorder"
+        },
+        "parent_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "order": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        }
+      }
+    }
+  }
+}

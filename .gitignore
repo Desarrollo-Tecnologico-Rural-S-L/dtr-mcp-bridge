@@ -8,3 +8,5 @@ vendor/
 .DS_Store
 .idea/
 .vscode/
+.tools/
+/dist/

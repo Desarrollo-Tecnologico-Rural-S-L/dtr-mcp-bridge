@@ -2,18 +2,19 @@
 /**
  * Plugin Name: DTR MCP Bridge
  * Description: Mantenimiento REST con solicitudes de un solo uso y aprobacion humana local.
- * Version: 1.3.6
+ * Version: 1.3.7
  * Requires at least: 6.5
  * Requires PHP: 8.1
  * Author: DTR
  */
 if (!defined('ABSPATH')) { exit; }
 require_once __DIR__ . '/dtr-mcp-content.php';
+require_once __DIR__ . '/dtr-mcp-elementor.php';
 require_once __DIR__ . '/dtr-mcp-extended.php';
 require_once __DIR__ . '/dtr-mcp-woo.php';
 
 final class DTR_MCP_Bridge {
-    const VERSION = '1.3.6';
+    const VERSION = '1.3.7';
     private static $application_user = 0;
     private static $upgrading = false;
 
@@ -30,23 +31,6 @@ final class DTR_MCP_Bridge {
             if (self::$upgrading) { $args['redirection'] = 0; $args['sslverify'] = true; }
             return $args;
         }, PHP_INT_MAX, 1);
-        add_action('wp_enqueue_scripts', function () {
-            if (!is_page(9) || !get_option('dtr_mcp_woo_account_styling')) { return; }
-            wp_register_style('dtr-mcp-woo-account', false, [], self::VERSION);
-            wp_enqueue_style('dtr-mcp-woo-account');
-            $css = <<<'CSS'
-body.page-id-9 .elementor-widget-theme-post-content .woocommerce {font-family:'Archivo Narrow',var(--e-global-typography-text-font-family),sans-serif;font-size:18px;line-height:1.55;color:var(--e-global-color-text,inherit)}
-body.page-id-9 .elementor-widget-theme-post-content .woocommerce h2,body.page-id-9 .elementor-widget-theme-post-content .woocommerce h3,body.page-id-9 .elementor-widget-theme-post-content .woocommerce .woocommerce-MyAccount-navigation {font-family:'Tenor Sans',var(--e-global-typography-primary-font-family),serif;color:var(--e-global-color-primary,inherit)}
-body.page-id-9 .elementor-widget-theme-post-content .woocommerce form .form-row label {font-family:'Archivo Narrow',var(--e-global-typography-text-font-family),sans-serif;font-size:18px;font-weight:400}
-body.page-id-9 .elementor-widget-theme-post-content .woocommerce input.input-text,body.page-id-9 .elementor-widget-theme-post-content .woocommerce select {font:inherit;max-width:100%;border:1px solid var(--e-global-color-secondary,#aaa);border-radius:3px;padding:11px 13px;background:transparent;color:inherit}
-body.page-id-9 .elementor-widget-theme-post-content .woocommerce button.button,body.page-id-9 .elementor-widget-theme-post-content .woocommerce a.button,body.page-id-9 .elementor-widget-theme-post-content .woocommerce input.button {font-family:'Tenor Sans',var(--e-global-typography-primary-font-family),serif;font-size:17px;font-weight:500;line-height:1.35;padding:12px 22px;border-radius:3px;background:var(--e-global-color-primary,#333);color:#fff;border:1px solid var(--e-global-color-primary,#333)}
-body.page-id-9 .elementor-widget-theme-post-content .woocommerce a {color:var(--e-global-color-accent,var(--e-global-color-primary,inherit))}
-body.page-id-9 .elementor-widget-theme-post-content .woocommerce .woocommerce-MyAccount-navigation ul {padding:0;list-style:none}
-body.page-id-9 .elementor-widget-theme-post-content .woocommerce .woocommerce-MyAccount-navigation li {padding:10px 0;border-bottom:1px solid var(--e-global-color-secondary,#ddd)}
-@media(max-width:767px){body.page-id-9 .elementor-widget-theme-post-content .woocommerce{font-size:16px}body.page-id-9 .elementor-widget-theme-post-content .woocommerce form .form-row label{font-size:16px}body.page-id-9 .elementor-widget-theme-post-content .woocommerce .u-column1,body.page-id-9 .elementor-widget-theme-post-content .woocommerce .u-column2{float:none;width:100%;margin-bottom:24px}}
-CSS;
-            wp_add_inline_style('dtr-mcp-woo-account', $css);
-        });
         add_action('rest_api_init', [__CLASS__, 'routes']);
         add_action('admin_menu', function () { add_management_page('DTR MCP', 'DTR MCP', 'manage_options', 'dtr-mcp', [__CLASS__, 'admin_page']); });
         add_action('admin_post_dtr_mcp_decision', [__CLASS__, 'decide']);
