@@ -1,0 +1,80 @@
+{
+  "name": "Mi web - Estado WordPress",
+  "active": false,
+  "nodes": [
+    {
+      "name": "Prueba manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        0,
+        0
+      ],
+      "id": "1deca110-8152-4954-a235-000000000000"
+    },
+    {
+      "name": "Entrada MCP",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "position": [
+        0,
+        180
+      ],
+      "id": "1deca110-8152-4954-a235-000000000001"
+    },
+    {
+      "name": "Consultar estado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "https://sitio.invalid/wp-json/dtr-mcp/v1/status",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          }
+        }
+      },
+      "position": [
+        300,
+        80
+      ],
+      "id": "1deca110-8152-4954-a235-000000000002"
+    }
+  ],
+  "connections": {
+    "Prueba manual": {
+      "main": [
+        [
+          {
+            "node": "Consultar estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entrada MCP": {
+      "main": [
+        [
+          {
+            "node": "Consultar estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
