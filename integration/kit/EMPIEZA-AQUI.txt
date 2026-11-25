@@ -1,0 +1,7 @@
+﻿DTR MCP Bridge 1.3.7 | Kit de evaluación
+
+1. Descomprime este kit en tu ordenador.
+2. Abre Instalacion-independiente-DTR-MCP-Bridge.pdf. El plugin al que hace referencia la guía ya está incluido en este kit.
+3. En tu WordPress de pruebas, ve a Plugins > Añadir plugin > Subir plugin. Selecciona dtr-mcp-bridge-1.3.7.zip tal como está, pulsa Instalar ahora y después Activar.
+4. Sigue la guía para configurar el operador y las credenciales en tu propio n8n. Importa estado-wordpress.json y prueba primero la lectura de la versión.
+5. Si ya tienes n8n, puedes omitir la carpeta servidor. Para evaluar WooCommerce, utiliza una tienda de pruebas y un producto simple en borrador.
